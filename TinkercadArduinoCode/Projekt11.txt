@@ -1,0 +1,48 @@
+
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(7,6,5,4,3,2); //pins connected to LCD
+//note, pin 6 is to "En"(enable), and 7 is "R/S" (Register select)
+//pin 2 to LCD DB7, pin 3 to LCD DB6, pin 4 to LCD DB5 and pin 5 to LCD DB4
+
+const int switchPin = 0; //tilt sensor goes to digital port 0
+int switchState = 0; 
+int prevSwitchState = 0; 
+int reply;
+
+void setup()
+{
+	pinMode(switchPin, INPUT);
+  	
+  	lcd.begin(16, 2);
+  	lcd.print("Ask me baby");
+  	lcd.setCursor(0, 1);
+  	lcd.print("I am a ball");
+  
+  
+}
+
+void loop()
+{
+	switchState = digitalRead(switchPin);
+  	if(switchState != prevSwitchState){ 
+		if(switchState == LOW){ 
+			reply = random(4); //pick random responce
+  			lcd.clear(); 
+			lcd.setCursor(0, 0); 
+			lcd.print("The ball says: "); 
+			lcd.setCursor(0,1 );
+          		switch(reply){ 
+				case 0: lcd.print("Idiot");
+				break; 
+				case 1: lcd.print("Dumt sagt"); 
+				break; 
+				case 2: lcd.print("Neeeeej"); 
+				break; 
+				case 3: lcd.print("stop dig selv"); 
+				break; 
+			}
+		}
+	}
+	prevSwitchState = switchState;  
+}
+}

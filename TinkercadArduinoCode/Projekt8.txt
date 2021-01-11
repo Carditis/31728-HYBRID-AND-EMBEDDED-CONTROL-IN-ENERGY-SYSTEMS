@@ -1,0 +1,44 @@
+const int switchPin = 6;
+unsigned long previousTime = 0;
+
+//variables for counting
+int switchState = 0; 
+int prevSwitchState = 0; 
+int led = 0;
+//out soecified time uinterval
+long interval = 30000;
+
+void setup()
+{
+	for(int x = 0; x < 6 ;x++){ 
+		pinMode(x, OUTPUT); 
+	}
+	pinMode(switchPin, INPUT);
+}
+
+void loop()
+{
+  unsigned long currentTime = millis();
+  //checks too se how much time has passed
+  //turns on LED's according to their pin number
+  if(currentTime - previousTime > interval){  
+		previousTime = currentTime;
+    digitalWrite(led, HIGH); 
+		led++;
+    if(led == 5){  
+	Serial.print("success");
+		} 
+	}
+  
+  //the reset part of the system
+  switchState = digitalRead(switchPin);
+  
+  if(switchState != prevSwitchState){ 
+		for(int x = 0; x < 6; x++){ 
+			digitalWrite(x, LOW); 
+		} 
+		led = 0; 
+		previousTime = currentTime; 
+	}
+  prevSwitchState = switchState; 
+}

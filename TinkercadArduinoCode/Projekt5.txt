@@ -1,0 +1,28 @@
+//including libaty for easy servo control, and creating a object
+
+#include <Servo.h>
+Servo servoen;
+
+int const potPin = A1; 
+int potVal;
+int angle = 0;
+
+void setup(){
+ servoen.attach(1);
+ Serial.begin(9600); 
+}
+
+void loop(){
+  //reading the analog input
+  potVal = analogRead(potPin);
+  Serial.print("potVal: "); 
+  Serial.print(potVal);
+  //mapping the input to motor degrees
+  angle = map(potVal, 0, 1023, 0, 179);
+	Serial.print(", angle: "); 
+	Serial.println(angle);
+  //sending pos signal to servo
+  	servoen.write(angle); 
+	delay(15);
+
+}
