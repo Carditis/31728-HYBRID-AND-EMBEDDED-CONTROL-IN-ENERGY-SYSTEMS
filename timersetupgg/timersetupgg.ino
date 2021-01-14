@@ -1,24 +1,45 @@
+
 #include <Timer5.h>
+
 
 volatile int counter = 0;
 
-int f = 50;
-int sig[1000];
-float fs = 500.0;
-float t;
+float mess1 = 0;
 
-void setup(){
-   Serial.begin(9600);
-   pinMode(10, OUTPUT);
+int annMess1[100];
 
-   MyTimer5.start();
-   MyTimer5.begin(500);
-   MyTimer5.attachInterrupt(CounterIncrease);
+void setup() {
+  Serial.begin(115200);
+  pinMode(10, OUTPUT);
 
-   for(int i = 0; i <= 500; i++){
-    t = (float)i/fs;
-    sig[i] = (int)1023 * (1/2 * (sin(2*PI*f*t)+1));
-    }
+  // MyTimer5.begin(10000);
+  // MyTimer5.attachInterrupt(counterIncrease);
+
+
+
+}
+
+void counterIncrease() {
+  analogReadResolution(10); //readings will now be done in 10 bits
+  mess1 = analogRead(A1); //
+  for (int i = 0; i = 100, i++) {
+    if(mess1 != annMess1[i-1]){
+      annMess1[i] = mess1;
+      }
   }
 
-void counterIncrease
+  //
+
+
+  counter++;
+}
+
+void loop() {
+  analogReadResolution(10);
+
+
+
+
+
+
+}

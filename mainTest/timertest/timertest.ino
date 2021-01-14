@@ -11,11 +11,10 @@ float fs = 500.0;
 float t;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   pinMode(10, OUTPUT);
-
-  MyTimer5.start();
-  MyTimer5.begin(500);
+ 
+  MyTimer5.begin(10000);
   MyTimer5.attachInterrupt(counterIncrease);
 
   //first wave yeye
