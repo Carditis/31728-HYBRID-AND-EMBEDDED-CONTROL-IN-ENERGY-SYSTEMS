@@ -1,4 +1,5 @@
 
+
 #include <Timer5.h>
 
 volatile int counter = 0;
@@ -13,15 +14,16 @@ float RC = 1.0 / (2.0 * PI*cutoff);
 float dt = 1.0 / 10000.0;
 float alpha = dt / dt * RC;
 
-float crossOffPoint = 176.0;
+float crossOffPoint = 176.0; //
 int zeroCrossCounter = 0;
 
 
 void setup() {
-  Serial.begin(115200);
-  pinMode(10, OUTPUT);
-
+  Serial.begin(9600);
+  Serial.print("det virker");
+  
   analogReadResolution(10); //readings will now be done in 10 bits
+  analogWriteResolution(10);
 
   MyTimer5.begin(10000);
   MyTimer5.attachInterrupt(takingMeasurements);
@@ -55,8 +57,10 @@ void takingMeasurements() {
 
 
 void loop() {
+  Serial.println("loop");
   analogWrite(A0, mess1);
   if (processedCounter < counter) {
+    Serial.println(counter);
     processedCounter = counter;
     Serial.println((mess1 / 1023.0) * 3.3);
 
@@ -81,6 +85,5 @@ void loop() {
 
     memcpy(voltage, annMess1, sizeof(annMess1[0]) * 100); //we copy a array to another array, so it does not get effected by the interrupter.
     interrupts();
-  */
-
+*/
 }
