@@ -19,9 +19,9 @@ float oldY = 0.0;
 float cutoff = 50.0;
 float RC = 1.0 / (2.0 * PI*cutoff);
 float dt = 1.0 / 10000.0;
-float alpha = dt / dt * RC;
+float alpha = dt / (dt + RC);
 
-float crossOffPoint = 1023.0/2; //
+float crossOffPoint = 1023.0 / 2; //
 int zeroCrossCounter = 0;
 
 //frequnce variables
@@ -30,10 +30,19 @@ unsigned long newTime = 0;
 int zeroCrossInterval = 100;
 float scaleFactor = 1.00015;
 double averageIntervalTime = 0.0;
+volatile double interpolateOne = 0.0;
+volatile double interpolateTwo = 0.0;
+String freq = "";
+
+int interruptCheckPin = 1;
 
 
 void setup() {
   Serial.begin(115200);
+
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.print("Freq: ");
 
   AdcBooster();
 
@@ -44,9 +53,14 @@ void setup() {
   MyTimer5.attachInterrupt(takingMeasurements);
 
   oldTime = millis();
+
+  pinMode(interruptCheckPin, OUTPUT);
 }
 
 void takingMeasurements() {
+  //for cheking if any interrups are skipped
+  //digitalWrite(interruptCheckPin, HIGH);
+  //digitalWrite(interruptCheckPin, LOW);
 
   mess1 = analogRead(A2);
   //analogWrite(A0, mess1);
@@ -55,23 +69,13 @@ void takingMeasurements() {
   analogWrite(A0, currentY);
 
   if (oldY > crossOffPoint and currentY <= crossOffPoint) {
+    if (zeroCrossCounter == 0) {
+      interpolateOne = (zeroCrossInterval - oldY) / (oldY - currentY);
+    } else if (zeroCrossCounter == 100) {
+      interpolateTwo = (zeroCrossInterval - oldY) / (oldY - currentY);
+    }
     zeroCrossCounter++;
   }
-
-
-  //zero cross here
-
-  /*
-    mess1 = analogRead(A1);
-    for (int i = 0; i < 100; i++) {
-    if (i == 99) {
-      annMess1[99] = mess1;
-    } else {
-      annMess1[i] = annMess1[i + 1];
-    }
-    }
-  */
-
   counter++;
 }
 
@@ -99,40 +103,25 @@ void loop() {
     //Serial.println(mess1);
     //Serial.println(voltage);
   }
-  if (zeroCrossCounter == zeroCrossInterval) {
-    Serial.println(freqCalculator());
+  if (zeroCrossCounter >= zeroCrossInterval) {
+    //Serial.println(freqCalculator());
+    freq = freqCalculator();
+    lcd.setCursor(7,0);
+    lcd.print(freq);
   }
 
   //digitalPins for writing on the LCD, and making LED turn on and off
   //need a check for if the frequency is correct.
 
-  /*
-    while (processedCounter < counter) {
-    // mess1 = analogRead(A1);
-    for (int i = 0; i < 100; i++) {
-      if (i == 99) {
-        annMess1[99] = mess1;
-      } else {
-        annMess1[i] = annMess1[i + 1];
-      }
-    }
-    fvoltage = (mess1 / 1023.0) * 3.3;
-    Serial.println(fvoltage);
-    processedCounter++;
-    }
-  */
-  /*
-    noInterrupts();
 
-    memcpy(voltage, annMess1, sizeof(annMess1[0]) * 100); //we copy a array to another array, so it does not get effected by the interrupter.
-    interrupts();
-  */
 }
 
 double freqCalculator() {
   newTime = millis();
   averageIntervalTime = ((double)(newTime - oldTime) / (double)(zeroCrossInterval));
   oldTime = newTime;
+  interpolateOne = 0.0;
+  interpolateTwo = 0.0;
   zeroCrossCounter = 0;
   return ((1 / averageIntervalTime) * 1000) * scaleFactor ;
 }
