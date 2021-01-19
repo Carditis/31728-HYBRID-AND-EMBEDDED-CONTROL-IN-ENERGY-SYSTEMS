@@ -1,17 +1,22 @@
 
-
 #include <Timer5.h>
-
 #include <LiquidCrystal.h>
 
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //pins connected to LCD
 
-float voltage = 0;
+float squaredVoltage = 0.0;
+float voltageSummed = 0.0;
+volatile float RMSVoltage = 0.0;
+int RMSCounter = 0;
 
 volatile int counter = 0;
 int processedCounter = 0;
 
 volatile int mess1 = 0;
+
+//LEDs
+int chargingLED = 0;
+int dechargingLED = 1;
 
 //lowpass and zerocross variables
 float currentY = 0.0;
@@ -32,13 +37,15 @@ float scaleFactor = 1.00015;
 double averageIntervalTime = 0.0;
 volatile double interpolateOne = 0.0;
 volatile double interpolateTwo = 0.0;
-String freq = "";
+volatile double freq = 0.0;
 
-int interruptCheckPin = 1;
+//int interruptCheckPin = 1;
 
 
 void setup() {
-  Serial.begin(115200);
+  // Serial.begin(115200);
+  pinMode(chargingLED, OUTPUT);
+  pinMode(dechargingLED, OUTPUT);
 
   lcd.begin(16, 2);
   lcd.clear();
@@ -47,14 +54,14 @@ void setup() {
   AdcBooster();
 
   analogReadResolution(10); //readings will now be done in 10 bits
-  analogWriteResolution(10);
+  analogWriteResolution(10); //same
 
   MyTimer5.begin(10000);
   MyTimer5.attachInterrupt(takingMeasurements);
 
   oldTime = millis();
 
-  pinMode(interruptCheckPin, OUTPUT);
+  //  pinMode(interruptCheckPin, OUTPUT);
 }
 
 void takingMeasurements() {
@@ -95,24 +102,46 @@ void AdcBooster()
 
 
 void loop() {
-  //analogWrite(A0, mess1);
-  //Serial.println("loop");
-  if (processedCounter < counter) {
+  /*
+    //analogWrite(A0, mess1);
+    //Serial.println("loop");
+    if (processedCounter < counter) {
     processedCounter = counter;
     voltage = (mess1 / 1023.0) * 3.3;
     //Serial.println(mess1);
     //Serial.println(voltage);
-  }
+    }
+  */
   if (zeroCrossCounter >= zeroCrossInterval) {
     //Serial.println(freqCalculator());
     freq = freqCalculator();
-    lcd.setCursor(7,0);
+    lcd.setCursor(7, 0);
     lcd.print(freq);
   }
+  if (freq < 49.975) {
+    digitalWrite(chargingLED, LOW);
+    digitalWrite(dechargingLED, HIGH);
+  } else if (freq > 50.025) {
+    digitalWrite(chargingLED, HIGH);
+    digitalWrite(dechargingLED, LOW);
+  } else {
+    digitalWrite(chargingLED, LOW);
+    digitalWrite(dechargingLED, LOW);
+  }
+  //RMS Voltage calculations
+  squaredVoltage = pow(((mess1 - 511.0) / 1023.0) * 3.3, 2);
+  voltageSummed = voltageSummed + squaredVoltage;
+  RMSCounter++;
 
-  //digitalPins for writing on the LCD, and making LED turn on and off
-  //need a check for if the frequency is correct.
-
+  if (RMSCounter >= 10000) {
+    RMSVoltage = sqrt((voltageSummed / RMSCounter));
+    RMSCounter = 0;
+  }
+  lcd.setCursor(0, 1);
+  lcd.print("RMS V:");
+  lcd.setCursor(10, 1);
+  lcd.print(RMSVoltage);
+  delay(500);
 
 }
 
