@@ -1,18 +1,17 @@
 #include "arduino_secrets.h"
-
 #include <Timer5.h>
 #include <LiquidCrystal.h>
 #include "thingProperties.h"
+
 
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //pins connected to LCD
 
 float squaredVoltage = 0.0;
 float voltageSummed = 0.0;
-volatile float RMSVoltage = 0.0;
+float RMSVoltage = 0.0;
 int RMSCounter = 0;
 
 volatile int counter = 0;
-int processedCounter = 0;
 
 volatile int mess1 = 0;
 //PWM Charging Signal Variables
@@ -38,7 +37,7 @@ float alpha = dt / (dt + RC);
 float minusAlpha = 1 - alpha;
 
 float crossOffPoint = 1023.0 / 2; //
-int zeroCrossCounter = 0;
+volatile int zeroCrossCounter = 0;
 
 //frequnce variables
 int zeroCrossInterval = 100;
@@ -61,6 +60,7 @@ void setup() {
   // Connect to Arduino IoT Cloud
   ArduinoCloud.begin(ArduinoIoTPreferredConnection);
 
+  //ready the LCD screen
   lcd.begin(16, 2);
   lcd.clear();
   lcd.print("Freq: ");
@@ -112,7 +112,9 @@ void AdcBooster()
 
 void loop() {
   //Serial.println(mess1);
-  ArduinoCloud.update();
+  if (counter > 20000) {
+    ArduinoCloud.update();
+  }
 
   if (zeroCrossCounter >= zeroCrossInterval) {
     freq = freqCalculator();
@@ -130,6 +132,7 @@ void loop() {
     digitalWrite(chargingLED, LOW);
     digitalWrite(dechargingLED, LOW);
   }
+  
   //RMS Voltage calculations
   squaredVoltage = pow(((mess1 - 511.0) / 1023.0) * 3.3, 2);
   voltageSummed = voltageSummed + squaredVoltage;
@@ -139,15 +142,14 @@ void loop() {
     RMSVoltage = (sqrt((voltageSummed / RMSCounter))) * 240 * 0.86;
     RMSCounter = 0;
     voltageSummed = 0.0;
+    lcd.setCursor(0, 1);
+    lcd.print("RMS V:");
+    lcd.setCursor(7, 1);
+    lcd.print(RMSVoltage);
+    rMSVALUE = RMSVoltage;
   }
-  lcd.setCursor(0, 1);
-  lcd.print("RMS V:");
-  lcd.setCursor(7, 1);
-  lcd.print(RMSVoltage);
-  rMSVALUE = RMSVoltage;
 
   PWMChargingAmount();
-
 }
 
 float freqCalculator() {
@@ -160,27 +162,27 @@ float freqCalculator() {
 void PWMChargingAmount() {
   //calculate the allowed charging amp from the network frequency, or set it to the slider
   float chargingAmp;
-  if (manualOverWrite == 1){
-     chargingAmp = manualChargingAmp; //just return the manual slider value, it is predefined to only go from 6 to 80
-} else {
-  chargingAmp = (freq - f0) / k;
-}
-//Setting the boundaries for the chaging current
-if (chargingAmp >= 80.0) {
-  chargingAmp = 80.0;
-} else if (chargingAmp <= 6.0) {
-  chargingAmp = 0.0;
-}
-//calculating the corresponding PWM signal, from the slopes in IEC61851
-float PWMSignal;
-if (chargingAmp == 0.0) {
-  PWMSignal = 0.0;
-} else if (chargingAmp < 52.0 and chargingAmp > 6) {
-  PWMSignal = (((chargingAmp - b1) / a1) / 100) * 1023;
-} else if (chargingAmp > 52.5 and chargingAmp <= 80.0) {
-  PWMSignal = (((chargingAmp - b2) / a2) / 100) * 1023.0;
-} else if (chargingAmp >= 52.0 and chargingAmp < 52.5) {
-  PWMSignal = 0.85 * 1023.0;
-}
-currentChargingAmp = "Charge current: " + String(chargingAmp) + "PWM Signal: " + String(PWMSignal);
+  if (manualOverWrite == 1) {
+    chargingAmp = manualChargingAmp; //just return the manual slider value, it is predefined to only go from 6 to 80
+  } else {
+    chargingAmp = (freq - f0) / k;
+  }
+  //Setting the boundaries for the chaging current
+  if (chargingAmp >= 80.0) {
+    chargingAmp = 80.0;
+  } else if (chargingAmp <= 6.0) {
+    chargingAmp = 0.0;
+  }
+  //calculating the corresponding PWM signal, from the slopes in IEC61851
+  float PWMSignal;
+  if (chargingAmp == 0.0) {
+    PWMSignal = 0.0;
+  } else if (chargingAmp < 52.0 and chargingAmp > 6) {
+    PWMSignal = (((chargingAmp - b1) / a1) / 100) * 1023;
+  } else if (chargingAmp > 52.5 and chargingAmp <= 80.0) {
+    PWMSignal = (((chargingAmp - b2) / a2) / 100) * 1023.0;
+  } else if (chargingAmp >= 52.0 and chargingAmp < 52.5) {
+    PWMSignal = 0.85 * 1023.0;
+  }
+  currentChargingAmp = "Charge current: " + String(chargingAmp) + "PWM Signal: " + String(PWMSignal);
 }
