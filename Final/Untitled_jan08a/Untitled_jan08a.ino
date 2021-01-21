@@ -186,3 +186,10 @@ void PWMChargingAmount() {
   }
   currentChargingAmp = "Charge current: " + String(chargingAmp) + "PWM Signal: " + String(PWMSignal);
 }
+void onManualOverWriteChange() {
+  // Do something
+}
+
+void onManualChargingAmpChange() {
+  // Do something
+}
