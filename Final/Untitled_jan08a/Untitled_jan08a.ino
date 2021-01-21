@@ -45,6 +45,8 @@ float scalingFactor = 1.092;
 float averageIntervalTime = 0.0;
 
 float freq = 0.0;
+volatile int PWMCounter = 0;
+float PWMSignal;
 
 //int interruptCheckPin = 1;
 
@@ -93,6 +95,7 @@ void takingMeasurements() {
   }
   oldY = currentY;
   counter++;
+  PWMCounter++;
 }
 
 void AdcBooster()
@@ -132,7 +135,7 @@ void loop() {
     digitalWrite(chargingLED, LOW);
     digitalWrite(dechargingLED, LOW);
   }
-  
+
   //RMS Voltage calculations
   squaredVoltage = pow(((mess1 - 511.0) / 1023.0) * 3.3, 2);
   voltageSummed = voltageSummed + squaredVoltage;
@@ -150,6 +153,15 @@ void loop() {
   }
 
   PWMChargingAmount();
+
+  if (PWMCounter < (PWMSignal * 100) * 10000) {
+    analogWrite(A0, 1023);
+  } else {
+    analogWrite(A0, 0);
+  }
+  if (PWMCounter >= 10000) {
+    PWMCounter = 0;
+  }
 }
 
 float freqCalculator() {
@@ -174,7 +186,7 @@ void PWMChargingAmount() {
     chargingAmp = 0.0;
   }
   //calculating the corresponding PWM signal, from the slopes in IEC61851
-  float PWMSignal;
+
   if (chargingAmp == 0.0) {
     PWMSignal = 0.0;
   } else if (chargingAmp < 52.0 and chargingAmp > 6) {
