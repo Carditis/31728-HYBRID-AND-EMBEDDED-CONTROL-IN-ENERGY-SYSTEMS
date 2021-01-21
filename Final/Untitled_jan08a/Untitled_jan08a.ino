@@ -41,7 +41,7 @@ volatile int zeroCrossCounter = 0;
 
 //frequnce variables
 int zeroCrossInterval = 100;
-float scalingFactor = 1.095;
+float scalingFactor = 1.092;
 float averageIntervalTime = 0.0;
 
 float freq = 0.0;
@@ -86,7 +86,7 @@ void takingMeasurements() {
   //analogWrite(A0, mess1);
 
   currentY = alpha * mess1 + (minusAlpha) * oldY;  //lowpassing here
-  analogWrite(A0, currentY);
+  //analogWrite(A0, currentY);
 
   if (oldY > crossOffPoint and currentY <= crossOffPoint) {
     zeroCrossCounter++;
@@ -122,10 +122,10 @@ void loop() {
     lcd.print(freq, 3);
     frequency = freq;
   }
-  if (freq < 49.975) {
+  if (freq < 49.9) {
     digitalWrite(chargingLED, LOW);
     digitalWrite(dechargingLED, HIGH);
-  } else if (freq > 50.025) {
+  } else if (freq > 50.1) {
     digitalWrite(chargingLED, HIGH);
     digitalWrite(dechargingLED, LOW);
   } else {
@@ -139,7 +139,7 @@ void loop() {
   RMSCounter++;
 
   if (RMSCounter >= 1000) {
-    RMSVoltage = (sqrt((voltageSummed / RMSCounter))) * 240 * 0.86;
+    RMSVoltage = (sqrt((voltageSummed / RMSCounter))) * 240 * 0.85;
     RMSCounter = 0;
     voltageSummed = 0.0;
     lcd.setCursor(0, 1);
@@ -178,13 +178,13 @@ void PWMChargingAmount() {
   if (chargingAmp == 0.0) {
     PWMSignal = 0.0;
   } else if (chargingAmp < 52.0 and chargingAmp > 6) {
-    PWMSignal = (((chargingAmp - b1) / a1) / 100) * 1023;
+    PWMSignal = (((chargingAmp - b1) / a1));
   } else if (chargingAmp > 52.5 and chargingAmp <= 80.0) {
-    PWMSignal = (((chargingAmp - b2) / a2) / 100) * 1023.0;
+    PWMSignal = (((chargingAmp - b2) / a2));
   } else if (chargingAmp >= 52.0 and chargingAmp < 52.5) {
-    PWMSignal = 0.85 * 1023.0;
+    PWMSignal = 85 ;
   }
-  currentChargingAmp = "Charge current: " + String(chargingAmp) + "PWM Signal: " + String(PWMSignal);
+  currentChargingAmp = "Charge current: " + String(chargingAmp) + "   PWM Signal: " + String(PWMSignal);
 }
 void onManualOverWriteChange() {
   // Do something

@@ -1,2 +1,2 @@
-#define SECRET_SSID "WestmannExtender"
-#define SECRET_PASS "18021961"
+#define SECRET_SSID "Arduino_router1"
+#define SECRET_PASS "Y1_c0urse_r1"
