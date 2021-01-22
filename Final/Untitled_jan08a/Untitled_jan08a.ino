@@ -15,6 +15,7 @@ int RMSCounter = 0;
 //main couter and mesuament variable
 volatile int counter = 0;
 volatile int mess1 = 0;
+//int interruptCheckPin = 8;
 
 //PWM Charging Signal Variables
 float k = 0.002702702702702741;       //Droop constant (Given in slides)
@@ -72,6 +73,8 @@ void setup() {
 
   MyTimer5.begin(10000); //the timer will interrupt the system 10000 per seacond. This is made possible with the Adcbooster
   MyTimer5.attachInterrupt(takingMeasurements);
+
+  //pinMode(interruptCheckPin,OUTPUT);
 }
 
 void takingMeasurements() {
